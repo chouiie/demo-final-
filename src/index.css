@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Titan+One&family=Rubik:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: dark;
@@ -395,3 +394,7 @@ input[type='range'] { accent-color: var(--accent); }
 }
 @media (prefers-reduced-motion: reduce) { .tw { animation: none; opacity: 0.7; } }
 .slide .opening-stat, .slide .opening-sub { max-width: 640px; text-wrap: balance; }
+
+/* no font flash: intro text fades in once, after the fonts have loaded */
+.slides, .slide-nav { opacity: 0; transition: opacity .6s ease .1s; }
+.fonts-ready .slides, .fonts-ready .slide-nav { opacity: 1; }
