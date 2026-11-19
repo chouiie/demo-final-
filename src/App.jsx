@@ -13,13 +13,26 @@ export default function App() {
   const [grid, setGrid] = useState(null)
   const [place, setPlace] = useState(null)
   const [cell, setCell] = useState(null)
-  const [scenario, setScenario] = useState('ssp585')
-  const [metric, setMetric] = useState('summer')
-  const [year, setYear] = useState(2090)
+  const saved = (() => { try { return JSON.parse(localStorage.getItem('answers')) || {} } catch { return {} } })()
+  const [scenario, setScenario] = useState(saved.future ?? 'ssp585')
+  const [metric, setMetric] = useState(saved.season === 'winter' ? 'winter' : 'summer')
+  const [year, setYear] = useState(saved.age ? Math.min(2100, saved.age + 80) : 2090)
   const [hoverYear, setHoverYear] = useState(null)
   const [playing, setPlaying] = useState(false)
-  const [guess, setGuess] = useState(null)
-  const [revealed, setRevealed] = useState(false)
+  // personalisation: 3 answers, remembered across cities and visits
+  const [answers, setAnswers] = useState(saved)
+  const complete = ['season', 'age', 'future'].every((k) => answers[k] != null)
+  const [quizState, setQuizState] = useState(complete ? 'done' : 'asking')
+  const [quizStep, setQuizStep] = useState(0)
+  const setAnswer = (key, value) => {
+    const next = { ...answers, [key]: value }
+    setAnswers(next)
+    try { localStorage.setItem('answers', JSON.stringify(next)) } catch { /* storage unavailable */ }
+    if (key === 'future') setScenario(value)
+    if (key === 'season') setMetric(value === 'winter' ? 'winter' : 'summer')
+    if (key === 'age') setYear(Math.min(2100, value + 80))
+  }
+  const retakeQuiz = () => { setQuizStep(0); setQuizState('asking') }
   const [rootRef, width] = useWidth(1200)
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem('theme') || 'dark' } catch { return 'dark' }
@@ -46,8 +59,6 @@ export default function App() {
     const c = nearestCell(grid, p.lat, p.lon)
     setPlace(p)
     setCell(null)
-    setGuess(null)
-    setRevealed(false)
     setHoverYear(null)
     setCell(await loadCell(c.id))
   }
@@ -119,8 +130,9 @@ export default function App() {
       {place && (
         <CityPanel place={place} cell={cell} scenario={scenario} setScenario={setScenario}
           year={year} setYear={setYear} hoverYear={hoverYear} setHoverYear={setHoverYear}
-          playing={playing} setPlaying={setPlaying} guess={guess} setGuess={setGuess}
-          revealed={revealed} setRevealed={setRevealed}
+          playing={playing} setPlaying={setPlaying}
+          answers={answers} setAnswer={setAnswer} quizStep={quizStep} setQuizStep={setQuizStep}
+          quizState={quizState} finishQuiz={() => setQuizState('done')} skipQuiz={() => setQuizState('skipped')} retakeQuiz={retakeQuiz}
           onClose={() => { setPlace(null); setCell(null); setPlaying(false) }} />
       )}
     </div>

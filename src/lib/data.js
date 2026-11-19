@@ -56,6 +56,8 @@ function prepareCell(raw) {
       ws: r.ws[i], we: r.we[i], winter: len(r.ws[i], r.we[i]), winterDays: r.wd[i],
       t: r.t[i],
     }))
+    // "spring + fall": the mild days that are neither summer nor winter
+    for (const d of out.series[s.key]) d.shoulder = Math.max(0, 365 - d.summer - d.winter)
   }
   // the historical part is identical in every scenario; baseline = 1950-79
   const base = out.series.ssp245.filter((d) => d.year >= BASELINE[0] && d.year <= BASELINE[1])
@@ -66,9 +68,59 @@ function prepareCell(raw) {
   out.baseline = {
     ss: med((d) => d.ss), se: med((d) => d.se), summer: Math.round(d3.mean(base, (d) => d.summer)),
     ws: med((d) => d.ws), we: med((d) => d.we), winter: Math.round(d3.mean(base, (d) => d.winter)),
+    shoulder: Math.round(d3.mean(base, (d) => d.shoulder)),
     t: d3.mean(base, (d) => d.t),
   }
   return out
+}
+
+// ---- personalization ----
+export const THIS_YEAR = 2026
+
+export const SEASONS = {
+  summer: { key: 'summer', label: 'Summer', icon: '☀', noun: 'summer' },
+  winter: { key: 'winter', label: 'Winter', icon: '❄', noun: 'winter' },
+  shoulder: { key: 'shoulder', label: 'Spring & fall', icon: '🍂', noun: 'spring and fall' },
+}
+
+export const QUESTIONS = [
+  {
+    key: 'season',
+    q: 'Which season is yours?',
+    hint: 'We’ll follow the season you care about most.',
+    opts: [
+      { value: 'summer', label: '☀ Summer', sub: 'Long, hot days' },
+      { value: 'winter', label: '❄ Winter', sub: 'Cold, crisp, maybe snow' },
+      { value: 'shoulder', label: '🍂 Spring & fall', sub: 'The mild days in between' },
+    ],
+  },
+  {
+    key: 'age',
+    q: 'How old are you?',
+    hint: 'So we can trace the seasons across your own lifetime.',
+    opts: [
+      { value: 2012, label: 'Under 18' },
+      { value: 2004, label: '18–24' },
+      { value: 1994, label: '25–39' },
+      { value: 1976, label: '40–59' },
+      { value: 1958, label: '60+' },
+    ],
+  },
+  {
+    key: 'future',
+    q: 'Which future do you think we’re heading toward?',
+    hint: 'Each answer matches a CMIP6 emissions scenario.',
+    opts: [
+      { value: 'ssp126', label: 'We cut emissions fast', sub: 'SSP1-2.6 · net zero around 2070' },
+      { value: 'ssp245', label: 'Some progress, not enough', sub: 'SSP2-4.5 · emissions fall slowly after 2050' },
+      { value: 'ssp585', label: 'Business as usual', sub: 'SSP5-8.5 · fossil fuel use keeps growing' },
+    ],
+  },
+]
+
+/** 11-year centred mean of a field around a year (smooths year-to-year noise) */
+export function smoothAt(cell, scenario, field, year) {
+  return windowMean(cell, scenario, field, year - 5, year + 5)
 }
 
 export function rowFor(cell, scenario, year) {

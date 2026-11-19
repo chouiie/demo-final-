@@ -293,3 +293,42 @@ input[type='range'] { accent-color: var(--accent); }
 /* data reads in mono: years, axis ticks, values */
 .tick, .direct-label, .year-out, .guess-out, .rbar-val, .stat b, .legend-ticks, .wheel-year, .tooltip strong { font-family: var(--font-mono); }
 .year-out, .wheel-year { font-weight: 500; }
+
+/* ---------- personalisation: quiz + "your seasons" ---------- */
+.quiz-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.quiz-dots { display: flex; gap: 6px; }
+.quiz-dots span { width: 22px; height: 4px; border-radius: 2px; background: var(--line); transition: background .3s; }
+.quiz-dots span.on { background: var(--accent); }
+.quiz-dots span.done { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.quiz-q { font-family: var(--font-serif); font-size: 22px !important; font-weight: 600 !important; margin: 8px 0 4px !important; animation: slide-in .4s ease both; }
+.quiz-hint { margin: 0 0 14px; }
+.quiz-opts { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opts.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  padding: 11px 14px; border-radius: 12px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--line); transition: border-color .15s, background .15s, transform .1s;
+}
+.opt:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.opt:active { transform: scale(.99); }
+.opt.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); }
+.opt span { font-weight: 500; }
+.opt small { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); }
+.quiz-nav { display: flex; justify-content: space-between; margin-top: 14px; }
+.link-btn { background: none; border: 0; padding: 0; cursor: pointer; color: var(--text-muted); font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; }
+.link-btn:hover { color: var(--text-primary); }
+.retake { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; cursor: pointer; }
+.retake:hover { border-color: var(--accent); }
+
+.you-head { font-size: 16px; line-height: 1.55; margin: 8px 0 6px; }
+.you-big { font-family: var(--font-mono); font-size: 20px; }
+.you-delta { font-family: var(--font-mono); font-size: 13px; padding: 1px 6px; border-radius: 6px; background: var(--surface-2); }
+.you-delta.up { color: var(--summer); }
+.you-delta.down { color: var(--winter); }
+.you-alarm { margin: 6px 0; padding: 8px 10px; border-radius: 10px; font-size: 13.5px; background: color-mix(in srgb, var(--ssp585) 14%, transparent); border: 1px solid color-mix(in srgb, var(--ssp585) 35%, transparent); }
+.you-sub { margin: 14px 0 6px; font-size: 13.5px; }
+.rbar.mine .rbar-label { font-weight: 600; }
+.rbar-fill.now { background: color-mix(in srgb, var(--hist) 60%, var(--text-primary)); }
+.marker-line { stroke: var(--text-muted); stroke-dasharray: 1 3; }
+.marker-label { font-family: var(--font-mono); font-size: 10.5px; fill: var(--text-secondary); }
+.globe-overlay { position: absolute; inset: 0; pointer-events: none; }

@@ -1,9 +1,10 @@
 import * as d3 from 'd3'
 import { BASELINE, HIST_END, SCENARIOS, SCEN, dateLabel } from '../lib/data'
-import GuessCard from './GuessCard'
+import Quiz from './Quiz'
 import LengthChart from './LengthChart'
 import SeasonRibbon from './SeasonRibbon'
 import YearWheel from './YearWheel'
+import YourSeasons from './YourSeasons'
 
 function around(cell, scenario, year, field) {
   const rows = cell.series[scenario].filter((d) => Math.abs(d.year - year) <= 5)
@@ -13,7 +14,8 @@ function around(cell, scenario, year, field) {
 /** Everything about one place. All views share scenario / year / hoverYear. */
 export default function CityPanel({
   place, cell, scenario, setScenario, year, setYear, hoverYear, setHoverYear,
-  playing, setPlaying, guess, setGuess, revealed, setRevealed, onClose,
+  playing, setPlaying, onClose,
+  answers, setAnswer, quizStep, setQuizStep, quizState, finishQuiz, skipQuiz, retakeQuiz,
 }) {
   const shown = hoverYear ?? year
   const b = cell?.baseline
@@ -39,14 +41,28 @@ export default function CityPanel({
         <div className="loading">Loading projections…</div>
       ) : (
         <>
-          <GuessCard place={place} cell={cell} guess={guess} setGuess={setGuess} revealed={revealed} setRevealed={setRevealed} />
+          {quizState === 'asking' && (
+            <Quiz place={place} answers={answers} setAnswer={setAnswer} step={quizStep} setStep={setQuizStep}
+              onDone={finishQuiz} onSkip={skipQuiz} />
+          )}
+          {quizState === 'done' && (
+            <YourSeasons place={place} cell={cell} answers={answers} scenario={scenario} year={year}
+              hoverYear={hoverYear} setHoverYear={setHoverYear} setYear={setYear} setPlaying={setPlaying} onRetake={retakeQuiz} />
+          )}
+          {quizState === 'skipped' && (
+            <button className="card retake" onClick={retakeQuiz}>
+              <span className="eyebrow">Make it personal</span>
+              <span>Answer 3 quick questions to see {place.name}’s seasons across your own lifetime →</span>
+            </button>
+          )}
+          {quizState !== 'asking' && (<>
 
           <div className="controls sticky-controls">
             <div className="seg" role="radiogroup" aria-label="Emissions scenario">
               {SCENARIOS.map((s) => (
                 <button key={s.key} role="radio" aria-checked={scenario === s.key}
                   className={scenario === s.key ? 'on' : ''} onClick={() => setScenario(s.key)}>
-                  <i className={`sw ${s.key}`} />{s.label}<small>{s.short}</small>
+                  <i className={`sw ${s.key}`} />{s.label}<small>{quizState === 'done' && answers.future === s.key ? 'your pick' : s.short}</small>
                 </button>
               ))}
             </div>
@@ -78,6 +94,8 @@ export default function CityPanel({
               onHover={setHoverYear} onSelect={(y) => { setPlaying(false); setYear(y) }} />
             <LengthChart cell={cell} season="winter" scenario={scenario} year={year} hoverYear={hoverYear}
               onHover={setHoverYear} onSelect={(y) => { setPlaying(false); setYear(y) }} />
+            <LengthChart cell={cell} season="shoulder" scenario={scenario} year={year} hoverYear={hoverYear}
+              onHover={setHoverYear} onSelect={(y) => { setPlaying(false); setYear(y) }} />
           </section>
 
           <section className="card">
@@ -92,6 +110,7 @@ export default function CityPanel({
             Summer = the first-to-last day each year when the 7-day mean temperature is above the hottest-25% line of {BASELINE[0]}–{BASELINE[1]};
             winter is the same idea below the coldest-25% line. One model and one run, so this shows one plausible future, not the full range.
           </p>
+          </>)}
         </>
       )}
     </aside>
