@@ -170,7 +170,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       const showNames = s.k > 2.2
       if (showNames) {
         ctx.fillStyle = P.cityText
-        ctx.font = "11px 'IBM Plex Sans', system-ui, sans-serif"
+        ctx.font = "11px 'Open Sans', system-ui, sans-serif"
       }
       for (const c of CITIES) {
         if (!visible(c.lon, c.lat) || d3.geoDistance(center, [c.lon, c.lat]) > Math.PI / 2 - 0.05) continue
@@ -198,7 +198,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       ctx.beginPath(); ctx.arc(x, y, 6 + t * 22, 0, 2 * Math.PI); ctx.stroke()
       ctx.fillStyle = P.pin
       ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 2 * Math.PI); ctx.fill()
-      ctx.font = "600 14px 'IBM Plex Sans', system-ui, sans-serif"
+      ctx.font = "600 14px 'Open Sans', system-ui, sans-serif"
       ctx.shadowColor = P.pinShadow; ctx.shadowBlur = 6
       ctx.fillText(s.target.name, x + 12, y + 5)
       ctx.shadowBlur = 0
