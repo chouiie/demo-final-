@@ -9,7 +9,8 @@
   --text-primary: #eef1f8;
   --text-secondary: #b4bccf;
   --text-muted: #7d869c;
-  --accent: #ffb27a;
+  --accent: #5fd4c4;
+  --accent-deep: #1f9e8f;
 
   /* validated on --surface-1 (dark): scenarios, all-pairs */
   --ssp126: #3987e5;
@@ -71,7 +72,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 650; }
 .has-place .topbar { right: calc(var(--panel-w) + 22px); }
 .topbar > * { pointer-events: auto; }
 .brand { font-family: var(--font-serif); font-weight: 600; font-size: 17px; white-space: nowrap; display: flex; align-items: center; gap: 10px; }
-.brand-dot { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle, #ffd7a8, #e05a20); box-shadow: 0 0 12px #ff8a4c; }
+.brand-dot { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle, #c9fff6, #1f9e8f); box-shadow: 0 0 12px #5fd4c4; }
 
 .city-search { position: relative; flex: 1; max-width: 460px; margin: 0 auto; }
 .city-search input {
@@ -80,7 +81,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 650; }
   border: 1px solid var(--line); backdrop-filter: blur(10px);
   outline: none; transition: border-color .2s, box-shadow .2s;
 }
-.city-search input:focus { border-color: #ffb27a88; box-shadow: 0 0 0 4px #ffb27a22; }
+.city-search input:focus { border-color: #5fd4c488; box-shadow: 0 0 0 4px #5fd4c422; }
 .city-search.big input { font-size: 15px; }
 .city-results {
   position: absolute; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 6px; list-style: none;
@@ -159,7 +160,7 @@ input[type='range'] { accent-color: var(--accent); }
 .guess-out { font-weight: 700; min-width: 54px; font-variant-numeric: tabular-nums; }
 .btn {
   padding: 8px 16px; border-radius: 999px; border: 0; cursor: pointer; font-weight: 600;
-  background: linear-gradient(135deg, #ffb27a, #e0582a); color: #1a0c04;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #04201c;
 }
 .reveal { margin-top: 14px; animation: slide-in .5s ease both; }
 .reveal-head { margin: 0 0 10px; }
@@ -179,7 +180,7 @@ input[type='range'] { accent-color: var(--accent); }
 .stat span { color: var(--text-secondary); }
 .stat b { font-variant-numeric: tabular-nums; }
 .stat em { grid-column: 1 / -1; font-style: normal; font-size: 12px; color: var(--text-muted); }
-.stat em.up { color: #ff9a6a; }
+.stat em.up { color: var(--accent); }
 .method { line-height: 1.5; }
 
 /* ---------- charts ---------- */
