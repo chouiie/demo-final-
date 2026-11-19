@@ -113,7 +113,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       ctx.beginPath(); ctx.arc(x, y, rr * 4, 0, 2 * Math.PI); ctx.fill()
       if (s.k > 2.2 && !(s.target && s.target.name === c.name)) {
         ctx.fillStyle = P.cityText
-        ctx.font = '11px Inter, system-ui, sans-serif'
+        ctx.font = "11px 'IBM Plex Sans', system-ui, sans-serif"
         ctx.fillText(c.name, x + 6, y - 5)
       }
     }
@@ -126,7 +126,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       ctx.beginPath(); ctx.arc(x, y, 6 + t * 22, 0, 2 * Math.PI); ctx.stroke()
       ctx.fillStyle = P.pin
       ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 2 * Math.PI); ctx.fill()
-      ctx.font = '600 14px Inter, system-ui, sans-serif'
+      ctx.font = "600 14px 'IBM Plex Sans', system-ui, sans-serif"
       ctx.fillStyle = P.pin
       ctx.shadowColor = P.pinShadow; ctx.shadowBlur = 6
       ctx.fillText(s.target.name, x + 12, y + 5)
