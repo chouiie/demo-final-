@@ -34,13 +34,6 @@ export default function App() {
   }
   const retakeQuiz = () => { setQuizStep(0); setQuizState('asking') }
   const [rootRef, width] = useWidth(1200)
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem('theme') || 'dark' } catch { return 'dark' }
-  })
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    try { localStorage.setItem('theme', theme) } catch { /* storage unavailable */ }
-  }, [theme])
 
   useEffect(() => { loadGrid().then(setGrid) }, [])
 
@@ -71,23 +64,19 @@ export default function App() {
   const wide = width > 900
   const panelW = wide ? Math.min(560, width * 0.46) : 0
   const windowIdx = windowFor(hoverYear ?? year)
-  const [a, m, z] = RAMPS[theme][metric]
+  const [a, m, z] = RAMPS[metric]
 
   return (
     <div ref={rootRef} className={'app' + (place ? ' has-place' : '')} style={{ '--panel-w': `${panelW}px` }}>
       <div className="stars" aria-hidden />
       <Globe grid={grid} scenario={scenario} metric={metric} windowIdx={windowIdx}
-        target={place} onPick={pickOnGlobe} shiftX={place && wide ? -panelW / 2 : 0} theme={theme} />
+        target={place} onPick={pickOnGlobe} shiftX={place && wide ? -panelW / 2 : 0} />
 
       <div className="topbar">
         <div className="brand">
           <span className="brand-dot" aria-hidden />Your Climate, Your Future
         </div>
         <CitySearch big value={place ? place.name : ''} onPick={choose} placeholder="Search your city…" />
-        <button className="icon-btn theme-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          aria-label={theme === 'dark' ? 'Switch to bright mode' : 'Switch to dark mode'} title={theme === 'dark' ? 'Bright mode' : 'Dark mode'}>
-          {theme === 'dark' ? '☀' : '☾'}
-        </button>
       </div>
 
       {!place && (

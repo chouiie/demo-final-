@@ -14,9 +14,10 @@ npm run dev
 ## How to use
 
 - Search a city or click any land on the globe; the globe flies to that place.
-- Drag to spin the globe and scroll to zoom. Use the sun/moon button to switch between dark and bright mode.
+- Drag to spin the globe and scroll to zoom.
 - The globe colors every model grid cell by days of summer gained (or winter lost) compared with 1950–79.
-- The city panel has a guess-then-reveal question, a scenario toggle, a year slider with play, a season clock, summer and winter length charts, and an every-year season ribbon. All views are linked: hover or click a year in any chart to update the others.
+- After you pick a place, 3 quick questions (your season, your age, the future you expect) personalize the panel. You see your season across your own lifetime and how much your choice of future changes it at age 80. Answers are remembered.
+- The city panel also has a scenario toggle, a year slider with play, a season clock, summer, winter, and spring + fall length charts, and an every-year season ribbon. All views are linked: hover or click a year in any chart to update the others.
 
 ## Data and method
 

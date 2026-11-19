@@ -40,7 +40,7 @@ function glowSprite(stops) {
  * data changes (dirty flag), draws only cells inside the visible cap, and batches cells
  * by colour bin. The light "overlay" layer carries the pulsing pin every frame.
  */
-export default function Globe({ grid, scenario, metric, windowIdx, target, onPick, shiftX = 0, theme = 'dark' }) {
+export default function Globe({ grid, scenario, metric, windowIdx, target, onPick, shiftX = 0 }) {
   const wrap = useRef(null)
   const canvas = useRef(null)
   const overlay = useRef(null)
@@ -66,7 +66,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
     if (!grid) return { bin: [], palette: [] }
     const base = grid.summary.baseline[metric]
     const fut = grid.summary[scenario][metric][windowIdx]
-    const [a, m, z] = RAMPS[theme][metric]
+    const [a, m, z] = RAMPS[metric]
     const max = RAMP_MAX[metric]
     const sc = d3.scaleLinear().domain([0, max / 2, max]).range([a, m, z]).interpolate(d3.interpolateLab).clamp(true)
     const palette = d3.range(BINS).map((i) => sc((i / (BINS - 1)) * max))
@@ -75,13 +75,13 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       return Math.min(BINS - 1, Math.round((v / max) * (BINS - 1)))
     })
     return { bin, palette }
-  }, [grid, scenario, metric, windowIdx, theme])
+  }, [grid, scenario, metric, windowIdx])
 
-  const sprite = useMemo(() => glowSprite(GLOBE_THEME[theme].lights), [theme])
+  const sprite = useMemo(() => glowSprite(GLOBE_THEME.lights), [])
 
   // ---------- drawing (refreshed after every render so it sees current props) ----------
   useLayoutEffect(() => {
-    const P = GLOBE_THEME[theme]
+    const P = GLOBE_THEME
 
     drawRef.current = () => {
       const cv = canvas.current
