@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <circle cx="32" cy="32" r="28" fill="#13213d"/>
-  <g stroke="#ff9a5c" stroke-width="3" stroke-linecap="round">
-    <circle cx="32" cy="32" r="28"/>
-    <ellipse cx="32" cy="32" rx="12" ry="28"/>
-    <path d="M32 4v56M4 32h56M8.5 18h47M8.5 46h47"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">❤️</text></svg>
