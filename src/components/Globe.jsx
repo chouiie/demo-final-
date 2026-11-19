@@ -40,12 +40,14 @@ function glowSprite(stops) {
  * data changes (dirty flag), draws only cells inside the visible cap, and batches cells
  * by colour bin. The light "overlay" layer carries the pulsing pin every frame.
  */
-export default function Globe({ grid, scenario, metric, windowIdx, target, onPick, shiftX = 0 }) {
+export default function Globe({ grid, scenario, metric, windowIdx, target, onPick, shiftX = 0, paused = false }) {
   const wrap = useRef(null)
   const canvas = useRef(null)
   const overlay = useRef(null)
   const st = useRef({ rot: [20, -15, 0], k: 1, w: 800, h: 600, dpr: 1, shift: 0, drag: null, anim: null, hover: null, dirty: true })
   const drawRef = useRef(() => {})
+  const pausedRef = useRef(paused)
+  useEffect(() => { pausedRef.current = paused; if (!paused) st.current.dirty = true }, [paused])
   const overlayRef = useRef(() => {})
 
   const cells = useMemo(() => {
@@ -170,7 +172,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       const showNames = s.k > 2.2
       if (showNames) {
         ctx.fillStyle = P.cityText
-        ctx.font = "11px 'IBM Plex Sans', system-ui, sans-serif"
+        ctx.font = "11px 'Rubik', system-ui, sans-serif"
       }
       for (const c of CITIES) {
         if (!visible(c.lon, c.lat) || d3.geoDistance(center, [c.lon, c.lat]) > Math.PI / 2 - 0.05) continue
@@ -198,7 +200,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       ctx.beginPath(); ctx.arc(x, y, 6 + t * 22, 0, 2 * Math.PI); ctx.stroke()
       ctx.fillStyle = P.pin
       ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 2 * Math.PI); ctx.fill()
-      ctx.font = "600 14px 'IBM Plex Sans', system-ui, sans-serif"
+      ctx.font = "600 14px 'Rubik', system-ui, sans-serif"
       ctx.shadowColor = P.pinShadow; ctx.shadowBlur = 6
       ctx.fillText(s.target.name, x + 12, y + 5)
       ctx.shadowBlur = 0
@@ -235,6 +237,7 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       const s = st.current
       const dt = Math.min(50, now - last)
       last = now
+      if (pausedRef.current) { raf = requestAnimationFrame(tick); return } // off-screen: do nothing
       if (s.anim) {
         const t = Math.min(1, (now - s.anim.t0) / s.anim.dur)
         const e = d3.easeCubicInOut(t)
@@ -331,20 +334,29 @@ export default function Globe({ grid, scenario, metric, windowIdx, target, onPic
       if (h) onPick?.({ lat: h.ll[1], lon: h.ll[0] })
     }
   }
-  const onWheel = (ev) => {
-    const s = st.current
-    s.anim = null
-    s.k = Math.max(0.8, Math.min(8, s.k * Math.exp(-ev.deltaY * 0.0015)))
-    s.dirty = true
-  }
+  // Wheel zooms while the globe screen is showing (non-passive so the browser
+  // doesn't also try to scroll).
+  useEffect(() => {
+    const cv = canvas.current
+    const onWheel = (ev) => {
+      const s = st.current
+      const rect = wrap.current.getBoundingClientRect()
+      if (Math.abs(rect.left) > 4 || Math.abs(rect.top) > 4) return // globe screen not showing
+      ev.preventDefault()
+      s.anim = null
+      s.k = Math.max(0.8, Math.min(8, s.k * Math.exp(-ev.deltaY * 0.0015)))
+      s.dirty = true
+    }
+    cv.addEventListener('wheel', onWheel, { passive: false })
+    return () => cv.removeEventListener('wheel', onWheel)
+  }, [])
 
   return (
     <div ref={wrap} className="globe-wrap">
       <canvas ref={canvas} className="globe" role="img"
         aria-label="Interactive globe. Drag to rotate, scroll to zoom, click land to choose a place."
         onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}
-        onPointerLeave={() => { const s = st.current; if (s.hover != null) { s.hover = null; s.dirty = true } }}
-        onWheel={onWheel} />
+        onPointerLeave={() => { const s = st.current; if (s.hover != null) { s.hover = null; s.dirty = true } }} />
       <canvas ref={overlay} className="globe-overlay" aria-hidden />
     </div>
   )
