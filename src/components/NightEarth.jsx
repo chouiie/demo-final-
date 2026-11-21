@@ -80,7 +80,7 @@ const BUCKETS = 8 // light brightness levels (one fillStyle per level per frame)
  * and drawn in a few brightness batches. The loop pauses while `active` is false or the
  * tab is hidden.
  */
-export default function NightEarth({ active = true }) {
+export default function NightEarth({ active = true, progress }) {
   const ref = useRef(null)
   // twinkling stars: plain elements animated by CSS (opacity/scale only → cheap, GPU-composited)
   const twinkles = useMemo(() => {
@@ -97,11 +97,18 @@ export default function NightEarth({ active = true }) {
   }, [])
   const sky = useRef(null)
   const fgRef = useRef(null)
+  const oceanRef = useRef(null)
+  const skyWrap = useRef(null)
+  const planet = useRef(null)
+  const sun = useRef(null)
+  const warm = useRef(null)
+  const progressRef = useRef(progress)
+  useEffect(() => { progressRef.current = progress }, [progress])
   const activeRef = useRef(active)
-  // pause at once when leaving; resume only after the 1 s page turn so the slide stays smooth
+  // pause at once when leaving; resume after the cross-fade so it stays smooth
   useEffect(() => {
     if (!active) { activeRef.current = false; return }
-    const id = setTimeout(() => { activeRef.current = true }, 1000)
+    const id = setTimeout(() => { activeRef.current = true }, 350)
     return () => clearTimeout(id)
   }, [active])
 
@@ -111,11 +118,13 @@ export default function NightEarth({ active = true }) {
     let raf
     let w = 0
     let h = 0
+    let H = 0 // the planet layer is taller than the screen so it can rise as you scroll
     let dpr = 1
     let edpr = 1 // the moving Earth layer renders a little lighter than the static ones
     let band = { top: 0, height: 0 } // the strip of screen the Earth occupies
     const skyCv = sky.current
     const fgCv = fgRef.current
+    const oceanCv = oceanRef.current
     let ready = false
 
     // light points → unit vectors + brightness bucket, done once
@@ -206,31 +215,35 @@ export default function NightEarth({ active = true }) {
         c.beginPath(); c.arc(r() * w, r() * h, big ? 1.3 : 0.6, 0, Math.PI * 2); c.fill()
       }
 
-      // the limb never moves on screen as the Earth spins, so halo + ocean are baked in too
+      // the limb never moves as the Earth spins, so halo + ocean are baked once (planet layer)
       const { R, cx, cy } = geom()
-      const halo = c.createRadialGradient(cx, cy, R * 0.985, cx, cy, R * 1.09)
+      oceanCv.width = Math.round(w * dpr)
+      oceanCv.height = Math.round(H * dpr)
+      const o = oceanCv.getContext('2d')
+      o.setTransform(dpr, 0, 0, dpr, 0, 0)
+      const halo = o.createRadialGradient(cx, cy, R * 0.985, cx, cy, R * 1.09)
       halo.addColorStop(0, 'rgba(70,150,255,0.55)')
       halo.addColorStop(0.25, 'rgba(50,120,255,0.18)')
       halo.addColorStop(1, 'rgba(30,80,200,0)')
-      c.fillStyle = halo
-      c.beginPath(); c.arc(cx, cy, R * 1.09, 0, Math.PI * 2); c.fill()
-      const sea = c.createRadialGradient(cx, cy - R * 0.2, R * 0.4, cx, cy, R)
+      o.fillStyle = halo
+      o.beginPath(); o.arc(cx, cy, R * 1.09, 0, Math.PI * 2); o.fill()
+      const sea = o.createRadialGradient(cx, cy - R * 0.2, R * 0.4, cx, cy, R)
       sea.addColorStop(0, '#02060f')
       sea.addColorStop(0.85, '#061229')
       sea.addColorStop(1, '#0c2a5c')
-      c.fillStyle = sea
-      c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.fill()
+      o.fillStyle = sea
+      o.beginPath(); o.arc(cx, cy, R, 0, Math.PI * 2); o.fill()
 
-      fgCv.width = skyCv.width
-      fgCv.height = skyCv.height
+      fgCv.width = oceanCv.width
+      fgCv.height = oceanCv.height
       const f = fgCv.getContext('2d')
       f.setTransform(dpr, 0, 0, dpr, 0, 0)
       const top = cy - R
-      const night = f.createLinearGradient(0, top, 0, h)
+      const night = f.createLinearGradient(0, top, 0, H)
       night.addColorStop(0, 'rgba(2,4,11,0)')
       night.addColorStop(1, 'rgba(2,4,11,0.55)')
       f.save(); f.beginPath(); f.arc(cx, cy, R, 0, Math.PI * 2); f.clip()
-      f.fillStyle = night; f.fillRect(0, top, w, h - top); f.restore()
+      f.fillStyle = night; f.fillRect(0, top, w, H - top); f.restore()
       const rim = f.createRadialGradient(cx, cy, R * 0.955, cx, cy, R * 1.004)
       rim.addColorStop(0, 'rgba(40,120,255,0)')
       rim.addColorStop(0.8, 'rgba(70,160,255,0.45)')
@@ -244,7 +257,19 @@ export default function NightEarth({ active = true }) {
 
     const frame = (t) => {
       const { R, cx, cy } = geom()
-      const lambda = -14 + (t / 1000) * SPIN
+      const p = progressRef.current?.current ?? 0
+      // scrolling turns the planet a little further and lifts it toward the viewer
+      if (planet.current) planet.current.style.transform = `translate3d(0, ${(-p * 0.42 * h).toFixed(1)}px, 0)`
+      if (skyWrap.current) skyWrap.current.style.transform = `translate3d(0, ${(-p * 0.08 * h).toFixed(1)}px, 0)`
+      // summer: the sun rises over the Earth's edge and warms the atmosphere as you scroll in
+      const rise = Math.min(1, Math.max(0, (p - 0.1) / 0.2))
+      const s3 = rise * rise * (3 - 2 * rise)
+      if (sun.current) {
+        sun.current.style.opacity = s3.toFixed(3)
+        sun.current.style.transform = `translate3d(-50%, ${(-50 + (1 - s3) * 22).toFixed(1)}%, 0) scale(${(0.75 + s3 * 0.25).toFixed(3)})`
+      }
+      if (warm.current) warm.current.style.opacity = (s3 * 0.95).toFixed(3)
+      const lambda = -14 + (t / 1000) * SPIN + p * 45
       const rot = [lambda, TILT[0], TILT[1]]
       const proj = d3.geoOrthographic().rotate(rot).scale(R).translate([cx, cy]).clipAngle(90).precision(1)
       const rotate = d3.geoRotation(rot)
@@ -283,8 +308,8 @@ export default function NightEarth({ active = true }) {
           const rz = X[2] * vx[i] + Y[2] * vy[i] + Z[2] * vz[i]
           const px = cx + R * ry
           const py = cy - R * rz
-          if (py < top || py > h + 2 || px < -2 || px > w + 2) continue
-          const edge = Math.max(0.15, (py - top) / (h - top))
+          if (py < top || py > H + 2 || px < -2 || px > w + 2) continue
+          const edge = Math.min(1, Math.max(0.15, (py - top) / (h - top)))
           const s = 0.8 + amp[i] * 1.2 * edge
           ctx.fillRect(px, py, s, s * (0.4 + edge * 0.6))
         }
@@ -294,7 +319,7 @@ export default function NightEarth({ active = true }) {
         if (rx <= 0.05) continue
         const px = cx + R * (X[1] * x0 + Y[1] * y0 + Z[1] * z0)
         const py = cy - R * (X[2] * x0 + Y[2] * y0 + Z[2] * z0)
-        if (py < top || py > h + 18 || px < -18 || px > w + 18) continue
+        if (py < top || py > H + 18 || px < -18 || px > w + 18) continue
         ctx.drawImage(glow, px - 18, py - 18, 36, 36)
       }
 
@@ -304,9 +329,10 @@ export default function NightEarth({ active = true }) {
       w = skyCv.clientWidth
       h = skyCv.clientHeight
       dpr = Math.min(2, window.devicePixelRatio || 1)
+      H = Math.round(h * 1.5)
       const { R, cy } = geom()
       const top = Math.max(0, Math.floor(cy - R - 4))
-      band = { top, height: h - top }
+      band = { top, height: H - top }
       edpr = Math.min(1.5, dpr)
       cv.width = Math.round(w * edpr)
       cv.height = Math.round(band.height * edpr)
@@ -330,6 +356,7 @@ export default function NightEarth({ active = true }) {
 
   return (
     <div className="night-earth" aria-hidden>
+      <div className="ne-sky" ref={skyWrap}>
       <canvas ref={sky} className="ne-layer" />
       <div className="twinkles">
         {twinkles.map((t, i) => (
@@ -338,8 +365,15 @@ export default function NightEarth({ active = true }) {
               animationDelay: `${t.delay}s`, animationDuration: `${t.dur}s` }} />
         ))}
       </div>
-      <canvas ref={ref} className="ne-layer ne-earth" />
-      <canvas ref={fgRef} className="ne-layer" />
+      </div>
+      <div className="ne-planet" ref={planet}>
+        {/* the sun sits behind the planet, so the Earth hides its lower half */}
+        <div className="ne-sun" ref={sun}><span className="ne-rays" /><span className="ne-flare" /></div>
+        <canvas ref={oceanRef} className="ne-layer" />
+        <canvas ref={ref} className="ne-layer ne-earth" />
+        <canvas ref={fgRef} className="ne-layer" />
+        <div className="ne-warm" ref={warm} />
+      </div>
     </div>
   )
 }

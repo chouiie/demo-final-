@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import CityPanel from './components/CityPanel'
 import CitySearch from './components/CitySearch'
 import Globe from './components/Globe'
-import Opening from './components/Opening'
-import { SLIDES } from './lib/slides'
+import Story from './components/Story'
 import { RAMPS, RAMP_MAX } from './lib/ramps'
 import { SCENARIOS, loadCell, loadGrid, nearestCell } from './lib/data'
 import { useWidth } from './lib/hooks'
@@ -75,80 +74,29 @@ export default function App() {
   ))
   const [a, m, z] = RAMPS[metric]
 
-  // intro slides (0..2) on the opening screen, then the globe slides in from the right
-  const [view, setView] = useState('open')
-  const [slide, setSlide] = useState(0)
-  const nav = useRef({ view, slide })
-  useEffect(() => { nav.current = { view, slide } }, [view, slide])
-
+  // a scrolling story first; scrolling past its end (or the button) dives into the globe
+  const [view, setView] = useState('story')
+  const explore = useCallback(() => setView('explore'), [])
+  const backToStory = () => {
+    setView('story')
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+  }
+  // the page only scrolls while the story is showing
   useEffect(() => {
-    const LAST = SLIDES.length - 1
-    let lock = 0
-    let lastWheel = 0
-    const step = (dir) => {
-      const now = performance.now()
-      if (now < lock) return
-      const { view: v, slide: sl } = nav.current
-      if (v !== 'open') return
-      if (dir > 0) {
-        if (sl < LAST) setSlide(sl + 1)
-        else setView('explore')
-      } else if (sl > 0) setSlide(sl - 1)
-      else return
-      lock = now + 700
-    }
-    // wheel / trackpad: one gesture = one step (ignore the inertia tail of the same gesture)
-    const onWheel = (ev) => {
-      if (nav.current.view !== 'open') return
-      ev.preventDefault()
-      const now = performance.now()
-      const fresh = now - lastWheel > 180
-      lastWheel = now
-      const d = Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.deltaY
-      if (!fresh || Math.abs(d) < 4) return
-      step(d > 0 ? 1 : -1)
-    }
-    // touch: swipe left / up = next, swipe right / down = back
-    let t0 = null
-    const onTouchStart = (ev) => { t0 = nav.current.view === 'open' ? [ev.touches[0].clientX, ev.touches[0].clientY] : null }
-    const onTouchEnd = (ev) => {
-      if (!t0) return
-      const dx = ev.changedTouches[0].clientX - t0[0]
-      const dy = ev.changedTouches[0].clientY - t0[1]
-      t0 = null
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) step(dx < 0 ? 1 : -1)
-      else if (Math.abs(dy) > 60) step(dy < 0 ? 1 : -1)
-    }
-    const onKey = (ev) => {
-      if (ev.target.closest?.('input, textarea') || nav.current.view !== 'open') return
-      if (['ArrowRight', 'ArrowDown', 'Enter', ' ', 'PageDown'].includes(ev.key)) { ev.preventDefault(); step(1) }
-      if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(ev.key)) { ev.preventDefault(); step(-1) }
-    }
-    window.addEventListener('wheel', onWheel, { passive: false })
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchend', onTouchEnd, { passive: true })
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('wheel', onWheel)
-      window.removeEventListener('touchstart', onTouchStart)
-      window.removeEventListener('touchend', onTouchEnd)
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [])
+    document.documentElement.classList.toggle('mode-explore', view === 'explore')
+  }, [view])
 
   return (
-    <div className={'stage view-' + view}>
-    <div className="track">
-    <Opening slide={slide} setSlide={setSlide} onStart={() => setView('explore')} active={view === 'open'} />
+    <>
+    <Story active={view === 'story'} onExplore={explore} />
+    <div className={'app-layer' + (view === 'explore' ? ' on' : '')}>
     <div ref={rootRef} id="explore" aria-hidden={view !== 'explore'} inert={view !== 'explore' ? true : undefined} className={'app' + (place ? ' has-place' : '')} style={{ '--panel-w': `${panelW}px` }}>
       <div className="stars" aria-hidden />
       <Globe grid={grid} scenario={scenario} metric={metric} windowIdx={windowIdx}
         target={place} onPick={pickOnGlobe} shiftX={wide ? (place ? -panelW / 2 : landingShift) : 0} paused={view !== 'explore'} />
 
       <div className="topbar">
-        <button className="brand" onClick={() => { setSlide(0); setView('open') }} title="Back to the start">
-          <span className="brand-dot" aria-hidden />Your Climate, Your Future
-        </button>
+        <button className="earth-btn" onClick={backToStory} aria-label="Back to the story" title="Back to the story">🌍</button>
         <CitySearch big value={place ? place.name : ''} onPick={choose} placeholder="Search your city…" />
       </div>
 
@@ -199,6 +147,6 @@ export default function App() {
       )}
     </div>
     </div>
-    </div>
+    </>
   )
 }
