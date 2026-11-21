@@ -122,8 +122,8 @@ export default function Story({ active, onExplore }) {
       <section className={cls(0) + ' first'} data-beat={0}>
         <div className="beat-inner">
         <p className="eyebrow">CMIP6 climate projections · 1950–2100</p>
-        <h1><Words text="Wonder how the seasons are changing?" /></h1>
-        <p className="beat-sub">Climate change doesn’t only make days hotter. It moves the calendar.</p>
+        <h1><Words text="Climate change is changing your seasons." /></h1>
+        <p className="beat-sub">A small rise in Earth’s average temperature changes something you live through every year, such as your seasons.</p>
         <button className="scroll-cue down" onClick={() => go(1)}>
           <span>Scroll to begin</span>
           <span className="scroll-arrow" aria-hidden>↓</span>
