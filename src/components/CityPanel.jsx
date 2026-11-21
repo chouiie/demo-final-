@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
 import { BASELINE, HIST_END, SCENARIOS, SCEN, dateLabel } from '../lib/data'
 import Quiz from './Quiz'
+import { InfoButton } from './ScenarioGuide'
 import LengthChart from './LengthChart'
 import SeasonRibbon from './SeasonRibbon'
 import YearWheel from './YearWheel'
@@ -14,7 +15,7 @@ function around(cell, scenario, year, field) {
 /** Everything about one place. All views share scenario / year / hoverYear. */
 export default function CityPanel({
   place, cell, scenario, setScenario, year, setYear, hoverYear, setHoverYear,
-  playing, setPlaying, onClose,
+  playing, setPlaying, onClose, onInfo,
   answers, setAnswer, quizStep, setQuizStep, quizState, finishQuiz, skipQuiz, retakeQuiz,
 }) {
   const shown = hoverYear ?? year
@@ -58,13 +59,16 @@ export default function CityPanel({
           {quizState !== 'asking' && (<>
 
           <div className="controls sticky-controls">
-            <div className="seg" role="radiogroup" aria-label="Emissions scenario">
-              {SCENARIOS.map((s) => (
-                <button key={s.key} role="radio" aria-checked={scenario === s.key}
-                  className={scenario === s.key ? 'on' : ''} onClick={() => setScenario(s.key)}>
-                  <i className={`sw ${s.key}`} />{s.label}<small>{quizState === 'done' && answers.future === s.key ? 'your pick' : s.short}</small>
-                </button>
-              ))}
+            <div className="seg-row">
+              <div className="seg" role="radiogroup" aria-label="Emissions scenario">
+                {SCENARIOS.map((s) => (
+                  <button key={s.key} role="radio" aria-checked={scenario === s.key}
+                    className={scenario === s.key ? 'on' : ''} onClick={() => setScenario(s.key)}>
+                    <i className={`sw ${s.key}`} />{s.label}<small>{quizState === 'done' && answers.future === s.key ? 'your pick' : s.short}</small>
+                  </button>
+                ))}
+              </div>
+              <InfoButton onClick={onInfo} />
             </div>
             <div className="year-ctl">
               <button className="icon-btn" aria-label={playing ? 'Pause' : 'Play through the years'}

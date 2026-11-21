@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import CityPanel from './components/CityPanel'
 import CitySearch from './components/CitySearch'
 import Globe from './components/Globe'
+import ScenarioGuide, { InfoButton } from './components/ScenarioGuide'
 import Story from './components/Story'
 import { RAMPS, RAMP_MAX } from './lib/ramps'
 import { SCENARIOS, loadCell, loadGrid, nearestCell } from './lib/data'
@@ -76,6 +77,7 @@ export default function App() {
 
   // a scrolling story first; scrolling past its end (or the button) dives into the globe
   const [view, setView] = useState('story')
+  const [guideOpen, setGuideOpen] = useState(false)
   const explore = useCallback(() => setView('explore'), [])
   const backToStory = () => {
     setView('story')
@@ -110,13 +112,16 @@ export default function App() {
       )}
 
       <div className="globe-legend">
-        <div className="seg small" role="radiogroup" aria-label="Map scenario">
-          {SCENARIOS.map((s) => (
-            <button key={s.key} role="radio" aria-checked={scenario === s.key}
-              className={scenario === s.key ? 'on' : ''} onClick={() => setScenario(s.key)}>
-              <i className={`sw ${s.key}`} />{s.label}
-            </button>
-          ))}
+        <div className="seg-row">
+          <div className="seg small" role="radiogroup" aria-label="Map scenario">
+            {SCENARIOS.map((s) => (
+              <button key={s.key} role="radio" aria-checked={scenario === s.key}
+                className={scenario === s.key ? 'on' : ''} onClick={() => setScenario(s.key)}>
+                <i className={`sw ${s.key}`} />{s.label}
+              </button>
+            ))}
+          </div>
+          <InfoButton onClick={() => setGuideOpen(true)} />
         </div>
         <div className="seg small" role="radiogroup" aria-label="Map layer">
           {[['summer', '☀ Summer gained'], ['winter', '❄ Winter lost']].map(([k, l]) => (
@@ -143,10 +148,14 @@ export default function App() {
           playing={playing} setPlaying={setPlaying}
           answers={answers} setAnswer={setAnswer} quizStep={quizStep} setQuizStep={setQuizStep}
           quizState={quizState} finishQuiz={() => setQuizState('done')} skipQuiz={() => setQuizState('skipped')} retakeQuiz={retakeQuiz}
-          onClose={() => { setPlace(null); setCell(null); setPlaying(false) }} />
+          onClose={() => { setPlace(null); setCell(null); setPlaying(false) }}
+          onInfo={() => setGuideOpen(true)} />
       )}
     </div>
     </div>
+    {guideOpen && (
+      <ScenarioGuide startAt={SCENARIOS.findIndex((s) => s.key === scenario)} onClose={() => setGuideOpen(false)} />
+    )}
     </>
   )
 }
